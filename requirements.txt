@@ -1,0 +1,21 @@
+# Hexo博客自动发布工具依赖
+# 注意：tkinter是Python标准库的一部分，无需单独安装
+
+# 运行时依赖（无需额外安装，使用Python标准库）
+# - tkinter (GUI界面)
+# - json (配置管理)
+# - subprocess (执行命令)
+# - datetime (时间处理)
+# - os, sys, pathlib (文件系统操作)
+# - ctypes (Windows API调用)
+
+# 构建exe文件所需依赖
+pyinstaller>=5.0.0
+
+# 可选依赖（用于创建桌面快捷方式）
+# winshell>=0.6
+# pywin32>=227
+
+# 如果需要更好的界面效果，可以考虑安装以下可选依赖：
+# pillow>=8.0.0  # 用于图像处理（可选）
+# ttkthemes>=3.2.0  # 更多主题选择（可选） 

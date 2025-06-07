@@ -437,25 +437,36 @@ class HexoPublisher:
             
             # 执行hexo g
             self.log_result("📦 正在生成静态文件 (hexo g)...")
-            result = subprocess.run(['hexo', 'g'], capture_output=True, text=True, 
+            result = subprocess.run('hexo g', shell=True, capture_output=True, text=True, 
                                   encoding='utf-8', errors='ignore')
             
             if result.returncode == 0:
                 self.log_result("✅ 静态文件生成成功")
+                if result.stdout.strip():
+                    pass
+                    #self.log_result(f"输出: {result.stdout.strip()}")
             else:
-                self.log_result(f"❌ 静态文件生成失败: {result.stderr}")
+                self.log_result(f"❌ 静态文件生成失败")
+                if result.stderr.strip():
+                    self.log_result(f"错误: {result.stderr.strip()}")
+                if result.stdout.strip():
+                    self.log_result(f"输出: {result.stdout.strip()}")
                 return False
             
             # 执行hexo d
             self.log_result("🌐 正在部署到远程 (hexo d)...")
-            result = subprocess.run(['hexo', 'd'], capture_output=True, text=True, 
+            result = subprocess.run('hexo d', shell=True, capture_output=True, text=True, 
                                   encoding='utf-8', errors='ignore')
             
             if result.returncode == 0:
                 self.log_result("✅ 部署成功！")
                 return True
             else:
-                self.log_result(f"❌ 部署失败: {result.stderr}")
+                self.log_result(f"❌ 部署失败")
+                if result.stderr.strip():
+                    self.log_result(f"错误: {result.stderr.strip()}")
+                if result.stdout.strip():
+                    self.log_result(f"输出: {result.stdout.strip()}")
                 return False
                 
         except Exception as e:

@@ -1,6 +1,6 @@
 # 🚀 Hexo博客自动发布工具 v2.0
 
-一款用Python开发的GUI工具，用于将Markdown笔记自动转换为Hexo博客文章并发布。
+一款用Python开发的GUI工具，用于将Markdown笔记软链接为Hexo博客文章并发布。
 
 ![](https://cdn.jsdelivr.net/gh/pzhwuhu/Image-Hosting/Posts%20insert/PixPin_2025-05-28_09-36-17.png)
 

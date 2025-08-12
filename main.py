@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Hexo博客自动发布工具 - 安全版本
-移除了可能导致打包问题的自定义样式
+Hexo博客自动发布工具 - 版本3.0
+支持两种模式：模式1（原有功能）和模式2（批量处理，不插入模板）
 """
 
 import tkinter as tk
@@ -18,13 +18,19 @@ import sys
 class HexoPublisher:
     def __init__(self, root):
         self.root = root
-        self.root.title("📝 Hexo博客自动发布工具 v2.0")
-        self.root.geometry("900x700")
+        self.root.title("📝 Hexo博客自动发布工具 v3.0")
+        self.root.geometry("900x750")
         self.root.configure(bg='#f0f0f0')
         
         # 配置文件路径
         self.config_file = "config.json"
         self.config = {}
+        
+        # 当前模式：1=原有功能，2=批量处理
+        self.current_mode = tk.IntVar(value=1)
+        
+        # 源文件列表（模式2使用）
+        self.source_files = []
         
         # 加载配置
         self.load_config()
@@ -58,7 +64,7 @@ class HexoPublisher:
         title_frame.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 20))
         
         # 标题和设置按钮
-        title_label = ttk.Label(title_frame, text="📝 Hexo博客自动发布工具", 
+        title_label = ttk.Label(title_frame, text="📝 Hexo博客自动发布工具 v3.0", 
                                font=('Arial', 16, 'bold'))
         title_label.pack(side=tk.LEFT)
         
@@ -66,67 +72,45 @@ class HexoPublisher:
                                  width=10)
         settings_btn.pack(side=tk.RIGHT)
         
+        # 模式切换区域
+        mode_frame = ttk.LabelFrame(main_frame, text="🔄 工作模式", padding="15")
+        mode_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+        
+        # 模式选择
+        mode1_radio = ttk.Radiobutton(mode_frame, text="📝 模式1: 添加Front Matter并创建软链接", 
+                                     variable=self.current_mode, value=1, 
+                                     command=self.on_mode_change)
+        mode1_radio.pack(anchor=tk.W, pady=5)
+        
+        mode2_radio = ttk.Radiobutton(mode_frame, text="📦 模式2: 批量处理，直接创建软链接", 
+                                     variable=self.current_mode, value=2, 
+                                     command=self.on_mode_change)
+        mode2_radio.pack(anchor=tk.W, pady=5)
+        
         # 主要功能区域
-        main_func_frame = ttk.LabelFrame(main_frame, text="📄 发布设置", padding="15")
-        main_func_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+        self.main_func_frame = ttk.LabelFrame(main_frame, text="📄 发布设置", padding="15")
+        self.main_func_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
         
-        # 源笔记文件选择
-        ttk.Label(main_func_frame, text="源笔记文件:").grid(
-            row=0, column=0, sticky=tk.W, pady=8, padx=(0, 10))
-        self.source_file_var = tk.StringVar()
-        self.source_file_entry = ttk.Entry(main_func_frame, textvariable=self.source_file_var, 
-                                          width=50)
-        self.source_file_entry.grid(row=0, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
-        ttk.Button(main_func_frame, text="📁 浏览", command=self.browse_source_file).grid(
-            row=0, column=2, padx=5, pady=8)
+        # 创建模式1的界面组件
+        self.create_mode1_widgets()
         
-        # 文章标题
-        ttk.Label(main_func_frame, text="文章标题:").grid(
-            row=1, column=0, sticky=tk.W, pady=8, padx=(0, 10))
-        self.title_var = tk.StringVar()
-        self.title_entry = ttk.Entry(main_func_frame, textvariable=self.title_var, width=50)
-        self.title_entry.grid(row=1, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
-        ttk.Button(main_func_frame, text="📝 使用文件名", command=self.use_filename_as_title).grid(
-            row=1, column=2, padx=5, pady=8)
+        # 创建模式2的界面组件
+        self.create_mode2_widgets()
         
-        # 分类
-        ttk.Label(main_func_frame, text="分类 (categories):").grid(
-            row=2, column=0, sticky=tk.W, pady=8, padx=(0, 10))
-        self.categories_var = tk.StringVar()
-        self.categories_entry = ttk.Entry(main_func_frame, textvariable=self.categories_var, 
-                                         width=50)
-        self.categories_entry.grid(row=2, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
-        ttk.Label(main_func_frame, text="💡 用空格分隔").grid(row=2, column=2, padx=5, pady=8)
-        
-        # 标签
-        ttk.Label(main_func_frame, text="标签 (tags):").grid(
-            row=3, column=0, sticky=tk.W, pady=8, padx=(0, 10))
-        self.tags_var = tk.StringVar()
-        self.tags_entry = ttk.Entry(main_func_frame, textvariable=self.tags_var, width=50)
-        self.tags_entry.grid(row=3, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
-        ttk.Label(main_func_frame, text="💡 用空格分隔").grid(row=3, column=2, padx=5, pady=8)
-        
-        # 是否发布选项
-        publish_frame = ttk.Frame(main_func_frame)
-        publish_frame.grid(row=4, column=0, columnspan=3, pady=15)
-        
+        # 是否发布选项（将在模式切换时动态创建）
         self.publish_var = tk.BooleanVar()
-        self.publish_check = ttk.Checkbutton(publish_frame, 
-                                           text="🚀 发布到博客 (执行 hexo g && hexo d)", 
-                                           variable=self.publish_var)
-        self.publish_check.pack()
         
         # 执行按钮
         execute_frame = ttk.Frame(main_frame)
-        execute_frame.grid(row=2, column=0, columnspan=3, pady=15)
+        execute_frame.grid(row=3, column=0, columnspan=3, pady=15)
         
-        self.execute_btn = ttk.Button(execute_frame, text="🚀 添加Front Matter并创建链接", 
+        self.execute_btn = ttk.Button(execute_frame, text="🚀 开始执行", 
                                      command=self.execute_publish, width=25)
         self.execute_btn.pack()
         
         # 结果显示区域
         result_frame = ttk.LabelFrame(main_frame, text="📊 执行结果", padding="10")
-        result_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), 
+        result_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), 
                          pady=(0, 10))
         
         # 创建文本框和滚动条
@@ -145,17 +129,170 @@ class HexoPublisher:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(3, weight=1)
-        main_func_frame.columnconfigure(1, weight=1)
+        main_frame.rowconfigure(4, weight=1)
+        self.main_func_frame.columnconfigure(1, weight=1)
+        
+        # 初始化界面状态
+        self.on_mode_change()
         
         # 添加欢迎信息
-        self.log_result("🎉 欢迎使用Hexo博客自动发布工具！")
+        self.log_result("🎉 欢迎使用Hexo博客自动发布工具 v3.0！")
         self.log_result("✅ 管理员权限已获取")
-        self.log_result("📝 工作流程: 在源文件添加Front Matter → 创建软链接到博客目录")
+        self.log_result("🔄 支持两种工作模式，请在上方选择")
         if self.config.get("posts_dir") and self.config.get("blog_root"):
             self.log_result("✅ 配置已加载")
         else:
             self.log_result("⚠️ 请先在设置中配置博客目录")
+    
+    def create_mode1_widgets(self):
+        """创建模式1的界面组件"""
+        # 源笔记文件选择
+        ttk.Label(self.main_func_frame, text="源笔记文件:").grid(
+            row=0, column=0, sticky=tk.W, pady=8, padx=(0, 10))
+        self.source_file_var = tk.StringVar()
+        self.source_file_entry = ttk.Entry(self.main_func_frame, textvariable=self.source_file_var, 
+                                          width=50)
+        self.source_file_entry.grid(row=0, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
+        ttk.Button(self.main_func_frame, text="📁 浏览", command=self.browse_source_file).grid(
+            row=0, column=2, padx=5, pady=8)
+        
+        # 文章标题
+        ttk.Label(self.main_func_frame, text="文章标题:").grid(
+            row=1, column=0, sticky=tk.W, pady=8, padx=(0, 10))
+        self.title_var = tk.StringVar()
+        self.title_entry = ttk.Entry(self.main_func_frame, textvariable=self.title_var, width=50)
+        self.title_entry.grid(row=1, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
+        ttk.Button(self.main_func_frame, text="📝 使用文件名", command=self.use_filename_as_title).grid(
+            row=1, column=2, padx=5, pady=8)
+        
+        # 分类
+        ttk.Label(self.main_func_frame, text="分类 (categories):").grid(
+            row=2, column=0, sticky=tk.W, pady=8, padx=(0, 10))
+        self.categories_var = tk.StringVar()
+        self.categories_entry = ttk.Entry(self.main_func_frame, textvariable=self.categories_var, 
+                                         width=50)
+        self.categories_entry.grid(row=2, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
+        ttk.Label(self.main_func_frame, text="💡 用空格分隔").grid(row=2, column=2, padx=5, pady=8)
+        
+        # 标签
+        ttk.Label(self.main_func_frame, text="标签 (tags):").grid(
+            row=3, column=0, sticky=tk.W, pady=8, padx=(0, 10))
+        self.tags_var = tk.StringVar()
+        self.tags_entry = ttk.Entry(self.main_func_frame, textvariable=self.tags_var, width=50)
+        self.tags_entry.grid(row=3, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
+        ttk.Label(self.main_func_frame, text="💡 用空格分隔").grid(row=3, column=2, padx=5, pady=8)
+    
+    def create_mode2_widgets(self):
+        """创建模式2的界面组件"""
+        # 源文件列表
+        ttk.Label(self.main_func_frame, text="源文件列表:").grid(
+            row=0, column=0, sticky=tk.W, pady=8, padx=(0, 10))
+        
+        # 文件列表显示区域
+        list_frame = ttk.Frame(self.main_func_frame)
+        list_frame.grid(row=0, column=1, padx=(0, 10), pady=8, sticky=(tk.W, tk.E))
+        
+        # 创建Listbox和滚动条
+        self.files_listbox = tk.Listbox(list_frame, height=6, width=50)
+        files_scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.files_listbox.yview)
+        self.files_listbox.configure(yscrollcommand=files_scrollbar.set)
+        
+        self.files_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        files_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # 文件操作按钮
+        files_btn_frame = ttk.Frame(self.main_func_frame)
+        files_btn_frame.grid(row=0, column=2, padx=5, pady=8)
+        
+        ttk.Button(files_btn_frame, text="📁 添加文件", 
+                  command=self.browse_source_files, width=15).pack(pady=2)
+        ttk.Button(files_btn_frame, text="🗑️ 清空列表", 
+                  command=self.clear_source_files, width=15).pack(pady=2)
+        ttk.Button(files_btn_frame, text="❌ 删除选中", 
+                  command=self.remove_selected_file, width=15).pack(pady=2)
+        
+        # 说明文字
+        ttk.Label(self.main_func_frame, text="💡 模式2: 直接创建软链接，不修改源文件", 
+                 font=('Arial', 9)).grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=(10, 0))
+    
+    def on_mode_change(self):
+        """模式切换时的处理"""
+        if self.current_mode.get() == 1:
+            # 模式1：显示原有界面
+            self.show_mode1_widgets()
+            self.execute_btn.configure(text="🚀 添加Front Matter并创建链接")
+        else:
+            # 模式2：显示批量处理界面
+            self.show_mode2_widgets()
+            self.execute_btn.configure(text="🚀 批量创建软链接")
+    
+    def show_mode1_widgets(self):
+        """显示模式1的组件"""
+        # 隐藏所有组件
+        for widget in self.main_func_frame.winfo_children():
+            widget.grid_remove()
+        
+        # 重新创建并显示模式1的组件
+        self.create_mode1_widgets()
+        
+        # 重新显示发布选项
+        publish_frame = ttk.Frame(self.main_func_frame)
+        publish_frame.grid(row=4, column=0, columnspan=3, pady=15)
+        
+        self.publish_check = ttk.Checkbutton(publish_frame, 
+                                           text="🚀 发布到博客 (执行 hexo g && hexo d)", 
+                                           variable=self.publish_var)
+        self.publish_check.pack()
+    
+    def show_mode2_widgets(self):
+        """显示模式2的组件"""
+        # 隐藏所有组件
+        for widget in self.main_func_frame.winfo_children():
+            widget.grid_remove()
+        
+        # 重新创建并显示模式2的组件
+        self.create_mode2_widgets()
+        
+        # 重新显示发布选项
+        publish_frame = ttk.Frame(self.main_func_frame)
+        publish_frame.grid(row=4, column=0, columnspan=3, pady=15)
+        
+        self.publish_check = ttk.Checkbutton(publish_frame, 
+                                           text="🚀 发布到博客 (执行 hexo g && hexo d)", 
+                                           variable=self.publish_var)
+        self.publish_check.pack()
+    
+    def browse_source_files(self):
+        """浏览并添加多个源文件"""
+        files = filedialog.askopenfilenames(
+            title="选择源文件",
+            filetypes=[("Markdown文件", "*.md"), ("文本文件", "*.txt"), ("所有文件", "*.*")]
+        )
+        
+        if files:
+            for file in files:
+                if file not in self.source_files:
+                    self.source_files.append(file)
+                    self.files_listbox.insert(tk.END, os.path.basename(file))
+            
+            self.log_result(f"✅ 已添加 {len(files)} 个文件到处理列表")
+    
+    def clear_source_files(self):
+        """清空源文件列表"""
+        self.source_files.clear()
+        self.files_listbox.delete(0, tk.END)
+        self.log_result("🗑️ 已清空文件列表")
+    
+    def remove_selected_file(self):
+        """删除选中的文件"""
+        selection = self.files_listbox.curselection()
+        if selection:
+            index = selection[0]
+            removed_file = self.source_files.pop(index)
+            self.files_listbox.delete(index)
+            self.log_result(f"❌ 已移除文件: {os.path.basename(removed_file)}")
+        else:
+            messagebox.showwarning("警告", "请先选择要删除的文件")
     
     def open_settings(self):
         """打开设置窗口"""
@@ -478,18 +615,32 @@ class HexoPublisher:
     
     def validate_inputs(self):
         """验证输入"""
-        if not self.source_file_var.get():
-            messagebox.showerror("错误", "请选择源笔记文件")
-            return False
+        if self.current_mode.get() == 1:
+            # 模式1：原有验证逻辑
+            if not self.source_file_var.get():
+                messagebox.showerror("错误", "请选择源笔记文件")
+                return False
+            
+            if not os.path.exists(self.source_file_var.get()):
+                messagebox.showerror("错误", "源文件不存在")
+                return False
+            
+            if not self.title_var.get():
+                messagebox.showerror("错误", "请输入文章标题")
+                return False
+        else:
+            # 模式2：批量处理验证
+            if not self.source_files:
+                messagebox.showerror("错误", "请添加要处理的源文件")
+                return False
+            
+            # 检查所有文件是否存在
+            for file_path in self.source_files:
+                if not os.path.exists(file_path):
+                    messagebox.showerror("错误", f"文件不存在: {file_path}")
+                    return False
         
-        if not os.path.exists(self.source_file_var.get()):
-            messagebox.showerror("错误", "源文件不存在")
-            return False
-        
-        if not self.title_var.get():
-            messagebox.showerror("错误", "请输入文章标题")
-            return False
-        
+        # 通用验证
         if not self.config.get("posts_dir"):
             messagebox.showerror("错误", "请在设置中配置博客文章目录")
             return False
@@ -514,10 +665,17 @@ class HexoPublisher:
         if not self.validate_inputs():
             return
         
+        if self.current_mode.get() == 1:
+            self.execute_mode1()
+        else:
+            self.execute_mode2()
+    
+    def execute_mode1(self):
+        """执行模式1：添加Front Matter并创建链接"""
         def publish_thread():
             try:
                 self.execute_btn.configure(state='disabled')
-                self.log_result("🚀 开始发布流程...")
+                self.log_result("🚀 开始模式1发布流程...")
                 
                 source_file = self.source_file_var.get()
                 title = self.title_var.get()
@@ -612,6 +770,62 @@ class HexoPublisher:
         
         # 在新线程中执行发布
         thread = threading.Thread(target=publish_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def execute_mode2(self):
+        """执行模式2：批量创建软链接"""
+        def batch_thread():
+            try:
+                self.execute_btn.configure(state='disabled')
+                self.log_result("🚀 开始模式2批量处理流程...")
+                
+                success_count = 0
+                total_count = len(self.source_files)
+                
+                for i, source_file in enumerate(self.source_files, 1):
+                    try:
+                        self.log_result(f"📝 处理文件 {i}/{total_count}: {os.path.basename(source_file)}")
+                        
+                        # 生成目标文件名（使用原文件名）
+                        filename = os.path.basename(source_file)
+                        target_path = os.path.join(self.config["posts_dir"], filename)
+                        
+                        # 检查目标文件是否已存在
+                        if os.path.exists(target_path):
+                            self.log_result(f"⚠️ 目标文件已存在，跳过: {filename}")
+                            continue
+                        
+                        # 创建软链接
+                        if self.create_symlink(source_file, target_path):
+                            self.log_result(f"✅ 软链接创建成功: {filename}")
+                            success_count += 1
+                        else:
+                            self.log_result(f"❌ 软链接创建失败: {filename}")
+                    
+                    except Exception as e:
+                        self.log_result(f"❌ 处理文件时出错: {os.path.basename(source_file)} - {str(e)}")
+                
+                self.log_result(f"🎉 批量处理完成！成功: {success_count}/{total_count}")
+                
+                # 如果选择发布，执行Hexo命令
+                if self.publish_var.get() and success_count > 0:
+                    self.log_result("🚀 开始发布到博客...")
+                    success = self.execute_hexo_commands(self.config["blog_root"])
+                    if success:
+                        self.log_result("🎉 发布完成！")
+                    else:
+                        self.log_result("❌ 发布失败")
+                elif success_count > 0:
+                    self.log_result("✅ 软链接创建完成，未执行发布")
+                
+            except Exception as e:
+                self.log_result(f"❌ 批量处理过程中出错: {str(e)}")
+            finally:
+                self.execute_btn.configure(state='normal')
+        
+        # 在新线程中执行批量处理
+        thread = threading.Thread(target=batch_thread)
         thread.daemon = True
         thread.start()
 

@@ -1,6 +1,118 @@
+# 📝 Hexo博客自动发布工具 v3.0
+
+一个功能强大的Hexo博客自动发布工具，支持两种工作模式，让博客管理更加高效。
+
+
+## 🚀 新版本特性
+
+### v3.0 新增功能
+
+- **双模式支持**：模式1（原有功能）+ 模式2（不添加Front Matter,可批量处理）
+- **模式切换**：顶部一键切换工作模式
+- **批量处理**：支持同时选择多个文件进行处理
+- **智能链接**：模式2直接创建软链接，不修改源文件
+
+## 🔄 两种工作模式
+
+### 📝 模式1：添加Front Matter并创建链接
+
+- **功能**：在源文件开头添加Front Matter（标题、分类、标签）
+- **适用场景**：需要为文章添加元数据的场景
+- **工作流程**：选择源文件 → 填写标题/分类/标签 → 添加Front Matter → 创建软链接
+![](https://cdn.jsdelivr.net/gh/pzhwuhu/Image-Hosting/Posts%20insert/20250812162504464.png)
+
+### 📦 模式2：批量处理，直接创建链接
+
+- **功能**：直接创建软链接，不修改源文件内容
+- **适用场景**：批量处理已有Front Matter的文件，**强烈建议搭配Obsidian的template使用**
+- **工作流程**：选择多个源文件 → 批量创建软链接 → 可选发布
+![](https://cdn.jsdelivr.net/gh/pzhwuhu/Image-Hosting/Posts%20insert/20250812162553905.png)
+## 🛠️ 系统要求
+
+- Windows 10/11
+- Python 3.6+
+- Node.js 和 npm
+- Hexo CLI（全局安装：`npm install -g hexo-cli`）
+
+## 📋 安装步骤
+
+1. **克隆或下载项目**
+
+   ```bash
+   git clone [项目地址]
+   cd auto-Publish
+   ```
+2. **安装依赖**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **运行程序**
+
+   ```bash
+   python main.py
+   ```
+
+## ⚙️ 配置说明
+
+首次使用前，请在设置中配置：
+
+- **博客文章目录**：Hexo博客的 `source/_posts` 目录
+- **博客根目录**：Hexo博客的根目录（包含 `_config.yml` 的目录）
+
+## 💡 使用指南
+
+### 模式1使用步骤
+
+1. 选择"📝 模式1: 添加Front Matter并创建链接"
+2. 选择源笔记文件
+3. 填写文章标题、分类、标签
+4. 选择是否发布到博客
+5. 点击"🚀 添加Front Matter并创建链接"
+
+### 模式2使用步骤
+
+1. 选择"📦 模式2: 批量处理，直接创建链接"
+2. 点击"📁 添加文件"选择多个源文件
+3. 管理文件列表（添加/删除/清空）
+4. 选择是否发布到博客
+5. 点击"🚀 批量创建软链接"
+
+## 🔧 功能特性
+
+- **智能文件检测**：自动检测源文件是否已有Front Matter
+- **软链接创建**：使用Windows软链接，节省磁盘空间
+- **批量处理**：支持同时处理多个文件
+- **实时日志**：显示详细的执行过程和结果
+- **管理员权限**：自动获取管理员权限以创建软链接
+- **Hexo集成**：支持一键发布到Hexo博客
+
+## 🚨 注意事项
+
+- 程序需要管理员权限来创建软链接
+- 模式2会直接使用原文件名，请确保文件名不重复
+- 建议在操作前备份重要文件
+- 确保Hexo环境配置正确
+
+## 📝 更新日志
+
+### v3.0 (2025-8-12)
+
+- ✨ 新增双模式支持
+- ✨ 新增批量文件处理功能
+- ✨ 新增模式切换界面
+- 🔧 优化用户界面和交互
+- 🐛 修复hexo命令执行问题
+
+### v2.0 (之前版本)
+
+- ✨ 支持Front Matter模板
+- ✨ 软链接创建功能
+- ✨ Hexo发布集成
+
 # 🚀 Hexo博客自动发布工具 v2.0
 
-一款用Python开发的GUI工具，用于将Markdown笔记自动转换为Hexo博客文章并发布。
+一款用Python开发的GUI工具，用于将Markdown笔记软链接为Hexo博客文章并发布。
 
 ![](https://cdn.jsdelivr.net/gh/pzhwuhu/Image-Hosting/Posts%20insert/PixPin_2025-05-28_09-36-17.png)
 
@@ -99,161 +211,10 @@ python main.py
 - 在源文件开头添加Front Matter（如果已存在会询问是否替换）
 - 在博客目录创建软链接指向源文件
 - 可选执行hexo发布命令
-
-## 📋 使用示例
-
-假设你要发布一篇关于Python的文章：
-
-- **源笔记文件**：`D:\notes\Python学习笔记.md`
-- **文章标题**：`Python基础语法详解`
-- **分类**：`编程 教程`
-- **标签**：`Python 基础 语法 编程`
-
-**执行过程：**
-
-1. **原始文件**：`D:\notes\Python学习笔记.md`
-   ```markdown
-   # Python学习笔记
-   
-   Python是一种高级编程语言...
-   ```
-
-2. **添加Front Matter后**：
-   ```yaml
-   ---
-   title: Python基础语法详解
-   date: 2024-01-15 14:30:00
-   categories:
-   - 编程
-   - 教程
-   tags:
-   - Python
-   - 基础
-   - 语法
-   - 编程
-   ---
-   
-   # Python学习笔记
-   
-   Python是一种高级编程语言...
-   ```
-
-3. **在博客目录创建软链接**：
-   - `D:\myblog\source\_posts\Python基础语法详解.md` → `D:\notes\Python学习笔记.md`
-
-## 🔧 构建exe文件
-
-### 🔧 DLL问题诊断
-如果遇到DLL加载问题，请先运行：
-```bash
-cd tests
-python diagnose_dll.py
-```
-该脚本会：
-1. 检测Python环境类型（Anaconda/标准Python）
-2. 测试关键模块导入（tkinter, ctypes等）
-3. 查找所有必要的DLL文件位置
-4. 自动生成适合你环境的构建命令
-
-### 构建exe文件
-```bash
-build.bat
-```
-构建脚本已集成终极修复方案，解决所有已知DLL问题，支持Anaconda和标准Python环境。
-
-### 手动构建
-```bash
-# 安装PyInstaller
-pip install pyinstaller
-
-# 构建exe文件
-pyinstaller --onefile --windowed --name=HexoPublisher hexo_publisher.py
-
-# exe文件将生成在 dist/HexoPublisher.exe
-```
-
-## 📁 文件结构
-
-```
-auto-Publish/
-├── main.py               # 主程序文件
-├── hexo_publisher.py     # 原版程序文件（备用）
-├── template.md          # 博客文章模板
-├── build.bat            # 构建可执行文件脚本
-├── clean.bat            # 清理构建文件脚本
-├── run.bat              # 启动程序脚本
-├── requirements.txt     # Python依赖列表
-├── README.md           # 说明文档（本文件）
-├── config.json         # 配置文件（运行后自动生成）
-├── tests/              # 测试文件夹
-│   ├── diagnose_dll.py # DLL诊断工具
-│   └── ...             # 其他测试文件
-└── dist/               # 构建后的exe文件目录
-    ├── HexoPublisher.exe
-    └── HexoPublisher_Portable.zip
-```
-
-## 🚨 故障排除
-
-| 问题                      | 解决方案                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------- |
-| tkinter DLL加载失败       | 1. 运行 `cd tests && python diagnose_dll.py` 诊断<br>2. 使用 `build.bat` 构建 |
-| _ctypes DLL加载失败       | 使用 `build.bat`，自动包含libffi DLL                                          |
-| 软链接创建失败            | 确保程序以管理员身份运行                                                      |
-| Hexo命令执行失败          | 检查Hexo是否正确安装，博客根目录是否正确                                      |
-| 界面显示异常              | 检查Python版本（需要3.6+）                                                    |
-| 配置丢失                  | 检查程序目录下的`config.json`文件是否存在                                     |
-| exe文件无法在其他电脑运行 | 安装Visual C++ Redistributable 2015-2022                                      |
-| Anaconda环境构建失败      | 使用 `build.bat`，会自动检测环境类型                                          |
-
-## 💡 小贴士
-
-- 第一次使用时记得先配置设置
-- 可以使用提供的 `template.md` 作为模板参考
-- 分类和标签支持中文，用空格分隔即可
-- 程序会记住你的配置，下次使用无需重新设置
-- 遇到DLL问题时，先运行 `cd tests && python diagnose_dll.py` 进行诊断
-- 推荐使用 `build.bat` 构建脚本，已完全解决所有已知DLL问题
-
-## 🔧 技术实现
-
-- **GUI框架**：tkinter + ttk
-- **配置管理**：JSON格式存储
-- **软链接**：Windows mklink命令
-- **进程管理**：subprocess模块
-- **权限检测**：ctypes.windll.shell32
-
-## 📋 安装要求
-
-- Python 3.6+
-- Windows 10/11（支持软链接创建）
-- 已安装并配置好的Hexo博客环境
-
-## 🔄 更新日志
-
-### v2.0.0
-- 🎨 ~~全新深色主题界面设计~~(TODO)
-- ✨ 添加分类和标签输入功能
-- 🔧 独立的设置窗口
-- 🛡️ 自动管理员权限获取
-- 📦 支持打包成exe文件
-- 🎯 优化用户体验和界面布局
-- 🔧 解决Anaconda环境下的构建问题
-
-### v1.0.0
-- 初始版本发布
-- 实现基本的GUI界面
-- 支持配置管理和软链接创建
-- 集成Hexo发布功能
-
-## 📄 许可证
-
-本项目采用MIT许可证。
-
 ## 🤝 贡献
 
 欢迎提交Issue和Pull Request来改进这个工具！
 
----
+## 许可证
 
-🎉 **享受便捷的博客发布体验吧！**
+本项目采用MIT许可证。
